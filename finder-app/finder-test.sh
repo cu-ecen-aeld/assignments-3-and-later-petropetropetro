@@ -30,11 +30,11 @@ MATCHSTR="The number of files are ${NUMFILES} and the number of matching lines a
 
 echo "Writing ${NUMFILES} files containing string ${WRITESTR} to ${WRITEDIR}"
 
-echo "Removing old build artifacts..."
-make clean
+#echo "Removing old build artifacts..."
+#make clean
 
-echo "Building 'writer' application..."
-make
+#echo "Building 'writer' application..."
+#make
 
 rm -rf "${WRITEDIR}"
 
