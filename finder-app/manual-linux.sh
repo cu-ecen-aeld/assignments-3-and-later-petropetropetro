@@ -53,10 +53,11 @@ then
 fi
 
 # TODO: Create necessary base directories
-mkdir -p rootfs
-cd rootfs
+
+mkdir "${OUTDIR}/rootfs"
+cd "${OUTDIR}/rootfs"
 mkdir -p bin dev ect home lib lib64 proc sbin sys tmp usr var
-mkdir -p usr/bin usr/lib usr/sbin
+mkdir -p usr/bin usr/lib usr/sbin usr/lib64
 mkdir -p var/log
 
 cd "$OUTDIR"
@@ -74,7 +75,6 @@ else
 fi
 
 # TODO: Make and install busybox
-make clean
 make ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE}
 make CONFIG_PREFIX="${OUTDIR}/busybox"  ARCH=${ARCH} CROSS_COMPILE=${CROSS_COMPILE} install
 
@@ -85,27 +85,27 @@ ${CROSS_COMPILE}readelf -a bin/busybox | grep "Shared library"
 
 # TODO: Add library dependencies to rootfs
 
-for lib in $(ldd ${OUTDIR}/busybox/bin/busybox | awk '{if (substr($3,1,1)=="/") print $3}'); do
-    cp -v "$lib" "${ROOTFS_DIR}/lib"
-done
-echo "Library lib64"
-cp -v $(ldd ${OUTDIR}/busybox/bin/busybox | grep 'ld-linux' | awk '{print $1}') ${ROOTFS_DIR}/lib64/
+cp -a /usr/aarch64-linux-gnu/lib/ld-linux-aarch64.so.* ${OUTDIR}/rootfs/lib/
+cp -a /usr/aarch64-linux-gnu/lib/libm.so.* ${OUTDIR}/rootfs/lib/
+cp -a /usr/aarch64-linux-gnu/lib/libresolv.so.* ${OUTDIR}/rootfs/lib/
+cp -a /usr/aarch64-linux-gnu/lib/libc.so.* ${OUTDIR}/rootfs/lib/
 
 # TODO: Make device nodes.
-mknod -m 666 dev/null c 1 3
-mknod -m 666 dev/console c 5 1
+sudo mknod -m 666 ${OUTDIR}/rootfs/dev/null c 1 3
+sudo mknod -m 666 ${OUTDIR}/rootfs/dev/console c 5 1
 
 
 # TODO: Clean and build the writer utility
 cd "$OUTDIR"
 
+cd ${FINDER_APP_DIR}
 make clean
 
-make
+make CROSS_COMPILE=${CROSS_COMPILE}
 # TODO: Copy the finder related scripts and executables to the /home directory
 # on the target rootfs
-cp -r finder-app/ ${ROOTFS_DIR}/home/
-cp -r writer/ ${ROOTFS_DIR}/home/
+cp -r ${FINDER_APP_DIR} ${ROOTFS_DIR}/home/
+
 # TODO: Chown the root directory
 sudo chown -R root:root ${ROOTFS_DIR}
 
